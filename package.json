@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-oregon",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Oregon scientific radio decoder and sensor nodes for Raspberry pi with RF433 module",
   "repository": {
     "type": "git",
