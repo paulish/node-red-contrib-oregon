@@ -1,0 +1,94 @@
+<script type="text/javascript">
+    RED.nodes.registerType('oregonPi', {
+        category: 'Raspberry Pi',
+        color: "#c6dbef",
+        defaults: {
+            name: {value: ""},
+            pin: {value: 1, required: true, validate: RED.validators.number()},
+            mode: {value: "sys"},
+            version: {value: 2}
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: "serial.png",
+        label: function() {
+            return this.name || "Oregon pin: " + this.pin;
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="oregonPi">
+    <div class="form-row">
+        <label for="node-input-pin"><i class="fa fa-circle"></i> <span data-i18n="oregonPi.label.pin"></span></label>
+        <input type="text" id="node-input-pin" style="width:47px; text-align:right"/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<label for="node-input-mode"><i class="fa fa-wrench"></i> <span data-i18n="oregonPi.label.mode"></span></label>
+        <select type="text" id="node-input-mode" style="width:100px;">
+          <!--<option value="wpi" data-i18n="oregonPi.mode.wpi"></option>-->
+          <!--<option value="gpio" data-i18n="oregonPi.mode.gpio"></option>-->
+          <option value="sys" data-i18n="oregonPi.mode.sys"></option>
+          <!--<option value="phys" data-i18n="oregonPi.mode.phys"></option>-->
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-version"><i class="fa fa-tasks"></i> <span data-i18n="oregonPi.label.version"></span></label>
+        <select type="text" id="node-input-version" style="width:100px;">
+          <option value=2>2</option>
+          <option value=3>3</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="oregonPi.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]oregonPi.label.name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="oregonPi">
+    <p>Oregon Pi input node.</p> Generates a <code>msg.payload</code> with hex representation
+    of Oregon Scientific radio protocol message.</p>
+    <p>The <code>msg.topic</code> is set to <i>OregonPi/{the pin number}</i>.</p>
+    <p>The <code>msg.version</code> is set to radio protocol version.</p>
+    <p>Requires the wiring-pi Node.js library to work.</p>
+    <p><b>Note:</b> we are using system pin numbers since for other modes wiring-pi library requires root privileges.</p>
+
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('oregon-decoder', {
+        category: 'function',
+        color: '#a6bbcf',
+        ddefaults: {
+            name: {value: ""}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "function.png",
+        label: function() {
+            return this.name || "oregon-decoder";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="oregon-decoder">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="oregonPi.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]oregonPi.label.name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="oregon-decoder">
+    <p>A node that converts the message payloads from oregonPi output node to and object with the following fields:</p>
+    <p>
+      <code>id</code> - oregon sensor type id<br/>
+      <code>sensorName</code> - oregon sensor name<br/>
+      <code>channel</code> - channel (1 - 3)<br/>
+      <code>rolling</code> - rolling code<br/>
+      <code>lowBattery</code> - low battery flag (true / false)<br/>
+      <code>data</code> - object with sensor data (depends on sensor type)<br/>
+    </p>
+</script>

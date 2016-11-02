@@ -1,0 +1,23 @@
+{
+  "oregonPi": {
+    "label": {
+      "pin": "pin",
+      "mode": "mode",
+      "version": "protocol version",
+      "name": "name"
+    },
+    "mode": {
+      "wpi": "wpi",
+      "gpio": "gpio",
+      "sys": "sys",
+      "phys": "phys"
+    },
+    "status": {
+      "connected": "connected",
+      "closed": "closed"
+    },
+    "errors": {
+      "error": "error: __error__"
+    }
+  }
+}
