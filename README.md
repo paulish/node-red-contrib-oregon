@@ -14,8 +14,8 @@ Refer to the Node-red documentation for details about [wiring-pi module](http://
 ## Hardware
 
 I used the following chip connected to my Raspberry pi 3:
- 
- <img alt="" src="rf433.jpg"/>
+
+!["rf433 module"](rf433.jpg)
  
 I also made a small antenna to the chip using a piece of wire.
 
@@ -23,12 +23,12 @@ I also made a small antenna to the chip using a piece of wire.
 
 The following flow example demonstrates how to publish data on [charts](https://www.npmjs.com/package/node-red-dashboard) using oregon nodes (the data to charts also comes from mqtt nodes).
 
- <img alt="" src="flow_example.png"/>
+ !["flow example"](flow_example.png)
  
-The "Oregon pin 27" is listening RF433 module which connected to Raspberry pi 27 pin [using GPIO pin numbering](http://wiringpi.com/pins/). 
+The **Oregon pin 27** is listening RF433 module which connected to Raspberry pi 27 pin [using GPIO pin numbering](http://wiringpi.com/pins/). 
 It detects oregon protocol data and outputs it in hexadecimal representation in `msg.payload`. The details about radio data and message format can be obtained [here](http://wmrx00.sourceforge.net/Arduino/OregonScientific-RF-Protocols.pdf). 
 
-The hexadecimal representation requires conversion to a human readable format. This is done by "oregon-decoder" node. It output the following fields in `msg.payload`:
+The hexadecimal representation requires conversion to a human readable format. This is done by **oregon-decoder** node. It outputs the following fields in `msg.payload`:
  * `id` - oregon sensor type id
  * `sensorName` - oregon sensor name
  * `channel` - channel (1 - 3)
