@@ -1,7 +1,7 @@
 # node-red-contrib-oregon
 [![npm version](https://badge.fury.io/js/node-red-contrib-oregon.svg)](https://badge.fury.io/js/node-red-contrib-oregon)
 
-Oregon Scientific radio decoder and sensor [Node-RED](http://nodered.org/)nodes for Raspberry pi with RF433 module connected.
+Oregon Scientific radio decoder and sensor [Node-RED](http://nodered.org/) nodes for Raspberry pi with RF433 module connected.
 
 ## Installation
 Run the following command in the root directory of your Node-RED install
@@ -13,3 +13,8 @@ Refer to the Node-red documentation for details about [wiring-pi module](http://
 
 ## Hardware
 
+I used the following chip connected to my Raspberry pi 3:
+ 
+ <img alt="" src="rf433.jpg"/>
+ 
+ I also made a small antenna to the chip using a piece of wire.
