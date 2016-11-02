@@ -39,9 +39,9 @@ The hexadecimal representation requires conversion to a human readable format. T
 The actual `temperature` and `humidity` (if particular sensor outputs them) are passed in the `msg.payload.data` fields. Therefore they should be extracted from the "oregon-decoder" output.
 
 On the flow example this is done by corresponding "temp" and "humi" function nodes. The temp function has the following code (for humidity replace `temperature` with `humidity`):
-<code>
+```javascript
 var data = msg.payload;
 return {topic: [data.sensorName, data.channel, data.rolling].join('/'), payload: data.data.temperature};
-</code>
+```
 
 Now the functions outputs can be connected to the appropriate charts or other Node-red nodes.
