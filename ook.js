@@ -283,35 +283,44 @@ CrestaDecoder.prototype.gotBit = function(value) {
 
 CrestaDecoder.prototype.decode = function(width) {
     if (200 <= width && width < 1300) {
+
+        //packets start with 0x75!
+        if (this.pos > 0 && this.data[0] != 0x75)
+            return -1;
+
         var w = width >= 750;
         switch (this.state) {
             case STATE_UNKNOWN:
-                if (w == 1)
-                    ++this.flip;
-                else if (2 <= this.flip && this.flip <= 10)
-                    this.state = STATE_T0;
-                else
-                    return -1;
-                break;
             case STATE_OK:
                 if (w == 0)
                     this.state = STATE_T0;
                 else
-                    this.gotBit(1);
+                    this.manchester(1);
                 break;
             case STATE_T0:
                 if (w == 0)
-                    this.gotBit(0);
+                    this.manchester(0);
                 else
                     return -1;
                 break;
         }
-    } else if (width >= 2500 && this.pos >= 7)
-        return 1;
+
+        // todo: length calculation can be made after we got the 3rd byte
+        if (this.pos > 6) {
+            // total packet length
+            var len = 3 + ((this.data[2] >> 1) & 0x1f);
+            if (len == this.pos) {
+                var check = 0;
+                for (var x = 1; x < len - 1; x++) {
+                    check ^= this.data[x];
+                }
+                return (check == 0) ? 1 : -1;
+            }
+        }
+    }
     else
         return -1;
-    if (this.pos > 0 && this.data[0] != 0x75)
-        return -1;
+
     return 0;
 };
 
