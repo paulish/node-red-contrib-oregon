@@ -5,14 +5,18 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         var node = this;
         node.pin = parseInt(config.pin, 10);
-        // Can't use other modes without root privileges. Hardcode to 'sys' for now.
+        // Can't use other modes without root privileges. Hardcoded to 'sys' for now.
         node.mode = 'sys';
         // if version is not set for some reason then use version 2 by default
         node.version = parseInt(config.version || 2, 10);
         if (typeof node.pin !== 'undefined') {
             wpi.setup(node.mode);
             wpi.pinMode(node.pin, wpi.INPUT);
-            var ookDecoder = new ook(node.version);
+            var ookDecoder;
+            if (node.version === 3)
+                ookDecoder = new ook.OregonDecoderV3();
+            else
+                ookDecoder = new ook.OregonDecoderV2();
             wpi.wiringPiISR(node.pin, wpi.INT_EDGE_BOTH, function(delta) {
                 if (ookDecoder.nextPulse(delta)) {
                     var msg = {topic: 'oregonPi/' + node.pin, version: node.version, payload: ookDecoder.sprint(true)};
