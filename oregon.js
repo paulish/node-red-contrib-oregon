@@ -14,12 +14,12 @@ module.exports = function(RED) {
             wpi.pinMode(node.pin, wpi.INPUT);
             var ookDecoder;
             if (node.version === 3)
-                ookDecoder = new ook.OregonDecoderV3();
+                ookDecoder = new ook[433].OregonDecoderV3();
             else
-                ookDecoder = new ook.OregonDecoderV2();
+                ookDecoder = new ook[433].OregonDecoderV2();
             wpi.wiringPiISR(node.pin, wpi.INT_EDGE_BOTH, function(delta) {
                 if (ookDecoder.nextPulse(delta)) {
-                    var msg = {topic: 'oregonPi/' + node.pin, version: node.version, payload: ookDecoder.sprint(true)};
+                    var msg = {topic: 'oregonPi/' + node.pin, version: node.version, payload: ookDecoder.sprint()};
                     node.status({fill: "green", shape: "dot", text: msg.payload});
                     node.send(msg);
                     ookDecoder.reset();

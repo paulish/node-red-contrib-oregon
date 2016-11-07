@@ -52,6 +52,7 @@ Decoder.prototype = {
     bits: 0,
     pos: 0,
     flip: 0,
+    reverse: false,
     nextPulse: function(width) {
         if (this.state !== STATE_DONE) {
             switch (this.decode(width)) {
@@ -120,15 +121,15 @@ Decoder.prototype = {
         this.state = STATE_DONE;
     },
     // return the received value as hex
-    sprint: function(reverse) {
-        var res = "";
-        if (reverse) {
-            for (var i = 0; i < this.pos; ++i) {
+    sprint: function() {
+        var res = "", i;
+        if (this.reverse) {
+            for (i = 0; i < this.pos; ++i) {
                 res += hexChars[this.data[i] & 0x0F];
                 res += hexChars[this.data[i] >> 4];
             }
         } else {
-            for (var i = 0; i < this.pos; ++i) {
+            for (i = 0; i < this.pos; ++i) {
                 res += hexChars[this.data[i] >> 4];
                 res += hexChars[this.data[i] & 0x0F];
             }
@@ -139,6 +140,7 @@ Decoder.prototype = {
 
 function OregonDecoderV2() {
     Decoder.call(this);
+    this.reverse = true;
 }
 
 util.inherits(OregonDecoderV2, Decoder);
@@ -206,6 +208,7 @@ OregonDecoderV2.prototype.decode = function(width) {
 
 function OregonDecoderV3() {
     Decoder.call(this);
+    this.reverse = true;
 }
 
 util.inherits(OregonDecoderV3, Decoder);
@@ -543,14 +546,18 @@ FSxDecoder.prototype.decode = function(width) {
 };
 
 module.exports = {
-    OregonDecoderV2: OregonDecoderV2,
-    OregonDecoderV3: OregonDecoderV3,
-    CrestaDecoder: CrestaDecoder,
-    KakuDecoder: KakuDecoder,
-    XrfDecoder: XrfDecoder,
-    HezDecoder: HezDecoder,
-    VisonicDecoder: VisonicDecoder,
-    EMxDecoder: EMxDecoder,
-    KSxDecoder: KSxDecoder,
-    FSxDecoder: FSxDecoder
+    433: {
+        OregonDecoderV2: OregonDecoderV2,
+        OregonDecoderV3: OregonDecoderV3,
+        CrestaDecoder: CrestaDecoder,
+        KakuDecoder: KakuDecoder,
+        XrfDecoder: XrfDecoder,
+        HezDecoder: HezDecoder
+    },
+    868: {
+        VisonicDecoder: VisonicDecoder,
+        EMxDecoder: EMxDecoder,
+        KSxDecoder: KSxDecoder,
+        FSxDecoder: FSxDecoder
+    }
 };
