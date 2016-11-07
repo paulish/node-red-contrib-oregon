@@ -261,6 +261,26 @@ function CrestaDecoder() {
 
 util.inherits(CrestaDecoder, Decoder);
 
+// updated according http://forum.jeelabs.net/node/309.html
+CrestaDecoder.prototype.gotBit = function(value) {
+    this.total_bits++;
+    if (++this.bits < 9) {
+        this.data[this.pos] = (this.data[this.pos] >> 1) | (value << 7);
+    } else {
+        if (this.pos > 0) {
+            this.data[this.pos] ^= (this.data[this.pos] << 1);
+        }
+
+        this.bits = 0;
+
+        if (++this.pos >= this.data.length) {
+            return this.reset();
+        }
+    }
+
+    this.state = STATE_OK;
+};
+
 CrestaDecoder.prototype.decode = function(width) {
     if (200 <= width && width < 1300) {
         var w = width >= 750;
@@ -289,6 +309,8 @@ CrestaDecoder.prototype.decode = function(width) {
     } else if (width >= 2500 && this.pos >= 7)
         return 1;
     else
+        return -1;
+    if (this.pos > 0 && this.data[0] != 0x75)
         return -1;
     return 0;
 };
