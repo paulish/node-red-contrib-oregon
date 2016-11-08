@@ -1,6 +1,6 @@
 /* ===================================================
  *  sensor.js - javascript decoder of oregon scientific
- *  radio protocol messages
+ *  and cresta weather sensors radio protocol messages
  * ---------------------------------------------------
  * The implementation is based on
  * Homey app to view Oregon Scientific sensor info in
@@ -32,7 +32,7 @@
  */
 "use strict";
 
-var dataLayouts = {
+var oregonDataLayouts = {
     'TH1': {
         len: 7,
         data: {
@@ -103,10 +103,10 @@ var dataLayouts = {
     }
 };
 
-var knownSensors = {
+var oregonKnownSensors = {
     '1984': {name: 'WGR800', layout: 'W1'},
     '1994': {name: 'WGR800', layout: 'W1'},
-    '1D20': {name: 'THGN123N/THGR122NX', layout: 'TH1'},
+    '1D20': {name: 'THGN123N/THGR122NX', layout: 'TH1'}, // example: 1D201D405520018732F
     '1A2D': {name: 'THGR228N/THGN132N/THGR918/THGR928/THGRN228/THGN500'},
     'E2CF': {name: 'THGR333/THGN228NX', layout: 'TH1'},   // deze is het // kleine in corona
     '1D30': {name: 'THGN500', layout: 'TH1'},
@@ -119,18 +119,17 @@ var knownSensors = {
     '5D60': {name: 'BTHR968/BTHR 918N', layout: 'THB'},
     'C844': {name: 'THWR800', layout: 'T1'},
     'D874': {name: 'UVN800', layout: 'UV2'},
-    'EC40': {name: 'THN132N/THR238NF', layout: 'T1'},
+    'EC40': {name: 'THN132N/THR238NF', layout: 'T1'}, // example: EC4015F07300D3
     'EA4C': {name: 'THWR288A'},
     'EC70': {name: 'UVR128', layout: 'UV1'},  //mijne in corona
     'F824': {name: 'THGN800/THGN801/THGR810', layout: 'TH1'},
     'F8B4': {name: 'THGR810', layout: 'TH1'}
 };
 
-function Sensor() {
+function OregonSensor() {
 }
 
-Sensor.prototype = {
-    data: undefined,
+OregonSensor.prototype = {
     decodeChannel: function(data) {
         var res = parseInt(data, 10);
         // fix channel since it is encoded as 1 << (channel - 1) and the channels range is 1-3
@@ -143,7 +142,7 @@ Sensor.prototype = {
     decodeHex: function(data) {
         var res = 0;
         for (var i = data.length - 1; i >= 0; i--) {
-            res = (res << 4) + parseInt(data.substr(i, 1), 16);
+            res = (res << 4) + parseInt(data.charAt(i), 16);
         }
         return res;
     },
@@ -169,9 +168,9 @@ Sensor.prototype = {
         }
 
         var id = data.slice(0, 4),
-            sensor = knownSensors[id],
+            sensor = oregonKnownSensors[id],
             layoutName = (sensor != null ? sensor.layout : null),
-            layout = (layoutName != null ? dataLayouts[layoutName] : null);
+            layout = (layoutName != null ? oregonDataLayouts[layoutName] : null);
         if (layout != null) {
             if (this.isValid(data, 8 + layout.len)) {
                 var res = {
@@ -222,17 +221,156 @@ Sensor.prototype = {
     }
 };
 
-module.exports = Sensor;
-/*
- data examples:
+// this layout table made according to the following document:
+// http://members.upc.nl/m.beukelaar/Crestaprotocol.pdf
 
- A1D201D405520018732F
- AEC4015F07300D3
+var crestaDataLayouts = {
+    0x0C: { // data example: 758FD68C25C124C1349003A8
+        name: 'Anemometer',
+        data: {
+            temperature: {start: 6, len: 2, div: 10},
+            tempHigh: {start: 9, len: 1, mul: 10, applyTo: 'temperature', applyAs: 'add'},
+            tempSign: {start: 8, len: 1, enc: 'hex', map: {0x4: -1, 0xC: 1}, applyTo: 'temperature', applyAs: 'mul'},
+            chill: {start: 10, len: 2, div: 10},
+            chillHigh: {start: 13, len: 1, mul: 10, applyTo: 'chill', applyAs: 'add'},
+            chillSign: {start: 12, len: 1, enc: 'hex', map: {0x4: -1, 0xC: 1}, applyTo: 'chill', applyAs: 'mul'},
+            wind: {start: 14, len: 2, div: 10},
+            windHigh: {start: 17, len: 1, mul: 10, applyTo: 'wind', applyAs: 'add'},
+            gust: {start: 18, len: 2},
+            gustLow: {start: 16, len: 1, div: 10, applyTo: 'gust', applyAs: 'add'},
+            direction: {start: 20, len: 1, enc: 'hex', convert: 'windDirSeg', mul: 22.5},
+            approaches: {
+                start: 21, len: 1, enc: 'hex', map: {
+                    0: 'Hasn’t moved from this angle',
+                    4: 'Has arrived at this angle via a clockwise rotation',
+                    8: 'Has arrived at this angle via a counter clockwise rotation'
+                }
+            }
+        }
+    },
+    0x0D: { // data example: 758FD0CD0722012800
+        name: 'UV sensor',
+        data: {
+            temperature: {start: 6, len: 2, div: 10},
+            tempHigh: {start: 9, len: 1, mul: 10, applyTo: 'temperature', applyAs: 'add'},
+            value: {start: 10, len: 2},
+            valueLow: {start: 8, len: 1, div: 10, applyTo: 'value', applyAs: 'add'},
+            index: {start: 12, len: 2, div: 10},
+            indexHigh: {start: 15, len: 1, mul: 10, applyTo: 'index', applyAs: 'add'},
+            level: {start: 14, len: 1}
+        }
+    },
+    0x0E: { // data example: 7580CC8ED000662C
+        name: 'Rain level meter',
+        data: {
+            rain: {start: 6, len: 2, enc: 'hex', mul: 0.7},
+            rainHigh: {start: 8, len: 2, enc: 'hex', mul: 0x100 * 0.7, applyTo: 'rain', applyAs: 'add'}
+        }
+    },
+    0x1E: { // data example: 7545CE5E87C151F3
+        name: 'Thermo/hygro-sensor',
+        data: {
+            temperature: {start: 6, len: 2, div: 10},
+            tempHigh: {start: 9, len: 1, mul: 10, applyTo: 'temperature', applyAs: 'add'},
+            sign: {start: 8, len: 1, enc: 'hex', map: {0x4: -1, 0xC: 1}, applyTo: 'temperature', applyAs: 'mul'},
+            humidity: {start: 10, len: 2}
+        }
+    }
+};
 
- var sensor = new Sensor();
- var res = sensor.decode('AEC4015F07300D3');
+function CrestaSensor() {
 
- if (res) {
- console.log(res);
- }
- */
+}
+
+CrestaSensor.prototype = {
+    getByte: function(data, index) {
+        return parseInt(data.slice(index << 1, (index + 1) << 1), 16);
+    },
+    windDirSeg: function(b) {
+        b ^= (b & 8) >> 1;
+        b ^= (b & 4) >> 1;
+        b ^= (b & 2) >> 1;
+        return -b & 0xf;
+    },
+    decode: function(data) {
+        if (typeof data !== 'string')
+            throw new Error("Invalid arguments");
+
+        if (data.length < 4)
+            throw new Error("Data is too short");
+
+        var header = data.slice(0, 2);
+        if (header !== '75')
+            throw new Error("Wrong header");
+        data = data.slice(2);
+
+        var bt = this.getByte(data, 0);
+        var res = {
+            channel: bt >> 5,
+            rolling: bt & 0x1f
+        };
+        if (res.channel >= 5)
+            res.channel--;
+        // get battery flag and package length
+        bt = this.getByte(data, 1);
+        res.lowBattery = (bt >> 6) == 0;
+        var len = (bt >> 1) & 0x1f;
+        if (data.length < len << 1)
+            throw new Error("Incorrect data length");
+        // shrink the data according to the package length
+        data = data.slice(0, len * 2);
+        // get device type and package number
+        bt = this.getByte(data, 2);
+        res.packageNumber = (bt >> 5);
+        var layout = crestaDataLayouts[bt & 0x1f];
+        if (layout != null) {
+            res.sensorName = layout.name;
+            res.data = {};
+            for (var p in layout.data) {
+                var value = 0;
+                var elem = layout.data[p];
+                var base = (elem.enc === 'hex') ? 16 : 10;
+                for (var i = 0; i < elem.len; i++) {
+                    value = value * base + parseInt(data.charAt(elem.start + i), base);
+                }
+                if (elem.map != null) {
+                    value = elem.map[value] || 'Unknown';
+                } else if (p != 'unknown') {
+                    value = Number(value);
+                    if (elem.convert)
+                        value = this[elem.convert](value);
+                    if (elem.div != null) {
+                        value /= elem.div;
+                    }
+                    if (elem.mul != null) {
+                        value *= elem.mul;
+                    }
+                    if (elem.add != null) {
+                        value += elem.add;
+                    }
+                }
+                if (elem.applyTo) {
+                    if (typeof res.data[elem.applyTo] !== 'undefined') {
+                        switch (elem.applyAs) {
+                            case 'mul':
+                                res.data[elem.applyTo] *= value;
+                                break;
+                            case 'add':
+                                res.data[elem.applyTo] += value;
+                                break;
+                        }
+                    }
+                } else
+                    res.data[p] = value;
+            }
+        } else {
+            throw new Error('Unknown sensor');
+        }
+        return res;
+    }
+};
+
+module.exports = {
+    OregonSensor: OregonSensor,
+    CrestaSensor: CrestaSensor
+};

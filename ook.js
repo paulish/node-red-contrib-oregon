@@ -112,7 +112,7 @@ Decoder.prototype = {
         }
     },
     decode: function() {
-        // if no version is specified then always skip
+        // the actual implementation is in the descendants
         return 0;
     },
     done: function() {

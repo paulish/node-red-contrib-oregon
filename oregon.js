@@ -35,13 +35,13 @@ module.exports = function(RED) {
     }
 
     function OregonSensorNode(config) {
-        var Sensor = require('./sensor');
+        var sensor = require('./sensor');
         RED.nodes.createNode(this, config);
         var node = this;
-        var sensor = new Sensor();
+        var oregonSensor = new sensor.OregonSensor();
         node.on('input', function(msg) {
             try {
-                var data = sensor.decode(msg.payload);
+                var data = oregonSensor.decode(msg.payload);
                 node.send({payload: data});
             } catch (error) {
                 node.error(error);
